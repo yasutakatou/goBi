@@ -2,7 +2,7 @@
 
 **語尾を自動に変換してくれるツール (Go言語製)**.
 
-![yannsu](https://github.com/yasutakatou/goBi/blob/pic/yannsu.png)
+![yannsu](https://github.com/yasutakatou/goBi/blob/pic/yannsu.gif)
 
 # できたもの
 
