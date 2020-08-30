@@ -2,9 +2,13 @@
 
 **語尾を自動に変換してくれるツール (Go言語製)**.
 
+![yannsu](https://github.com/yasutakatou/goBi/blob/pic/yannsu.png)
+
 # できたもの
 
 [ポートフォリオや個人開発で使えそうなアイデア](https://qiita.com/MasatoraAtarashi/items/eec4642fe1e6ce79304d)
+
+![2](https://github.com/yasutakatou/goBi/blob/pic/2.png)
 
 こちらの記事に書かれた大量のアイディアに触発されて作りました。
 
