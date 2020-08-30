@@ -1,0 +1,7 @@
+github.com/micmonay/keybd_event v1.1.0 h1:fQzkqiG/Siwji1Ju9NDkIb8FSFFlPU76YbJntrXdtQw=
+github.com/micmonay/keybd_event v1.1.0/go.mod h1:QS2Kfz0PbPezFqMPEot+l/cK78/tHLZtZ7AbYUCRKsQ=
+github.com/robotn/gohook v0.30.3 h1:JU72aZK3tny/5pmKp6YAK3IpaftF5IQHRu4v7PBpeoo=
+github.com/robotn/gohook v0.30.3/go.mod h1:cWEhn477y4+4/D1SXIDPhivGSNsZT4dcco3uLTVBa6g=
+github.com/taglme/string2keyboard v0.0.0-20190317231536-45ba78797368 h1:8RASeTus7O97xn1yBltSjFZJcLDT8tFmeRQEBTvhoV4=
+github.com/taglme/string2keyboard v0.0.0-20190317231536-45ba78797368/go.mod h1:jTrad2xtVdS9K6UfyWJcJ39D0b3U13u4EX0esoaGisY=
+github.com/vcaesar/tt v0.10.0/go.mod h1:GHPxQYhn+7OgKakRusH7KJ0M5MhywoeLb8Fcffs/Gtg=
