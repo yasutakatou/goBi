@@ -16,6 +16,8 @@
 
 ![yannsu2](https://github.com/yasutakatou/goBi/blob/pic/yannsu2.gif)
 
+途中から"ました"→"です"のルールに変えて変換しています。<br>
+
 # 環境
 
 動作環境は**Windows系OS**のみです。<br>
