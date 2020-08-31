@@ -87,34 +87,45 @@ func intsConvert(strs string) []int {
 
 func do(gobi []gobiData, deleteKey int) {
 	EvChan := hook.Start()
-	defer hook.End()
 
 	currentHwnd := GetWindow("GetForegroundWindow")
 
 	shiftFlag := 0
+	inputCount := 0
 
 	for ev := range EvChan {
 		if ev.Kind == 4 || ev.Kind == 5 { //KeyHold = 4,KeyUp = 5
-			shiftFlag, strs := keyHoldUp(int(ev.Rawcode), int(ev.Kind), shiftFlag)
-			if shiftFlag == 256 {
-				return
-			}
-			if len(strs) > 0 {
-				nowHwnd := GetWindow("GetForegroundWindow")
-				if currentHwnd == nowHwnd {
-					result := checkRuleAndGo(gobi, strs)
-					if result != 0 {
-						delKey(len(gobi[(result - 1)].Mae))
-						string2keyboard.KeyboardWrite(gobi[(result - 1)].Ato)
-						if debug == true {
-							fmt.Println("type: " + gobi[(result-1)].Ato)
-						}
-						clearCount(gobi)
-					}
-				} else {
-					currentHwnd = GetWindow("GetForegroundWindow")
-					clearCount(gobi)
+			if inputCount > 0 {
+				inputCount = inputCount - 1
+			} else {
+				shiftFlag, strs := keyHoldUp(int(ev.Rawcode), int(ev.Kind), shiftFlag)
+				if shiftFlag == 256 {
+					hook.End()
+					return
 				}
+				if len(strs) > 0 {
+					nowHwnd := GetWindow("GetForegroundWindow")
+					if currentHwnd == nowHwnd {
+						result := checkRuleAndGo(gobi, strs)
+						if result != 0 {
+							delKey(len(gobi[(result - 1)].Mae))
+							string2keyboard.KeyboardWrite(gobi[(result - 1)].Ato)
+							inputCount = len(gobi[(result - 1)].Mae) + len(gobi[(result - 1)].Ato)
+	
+							if debug == true {
+								fmt.Println("type: " + gobi[(result - 1)].Ato)
+							}
+							for i := 0; i < len(gobi); i++ {
+								gobi[i].MaeCount = 0
+							}
+						}
+					} else {
+						currentHwnd = GetWindow("GetForegroundWindow")
+						for i := 0; i < len(gobi); i++ {
+							gobi[i].MaeCount = 0
+						}
+					}
+				}	
 			}
 		}
 
@@ -135,19 +146,11 @@ func delKey(keys int) {
 
 }
 
-func clearCount(gobi []gobiData) {
-	for i := 0; i < len(gobi); i++ {
-		gobi[i].MaeCount = 0
-	}
-}
-
 func checkRuleAndGo(gobi []gobiData, strs string) int {
 	for i := 0; i < len(gobi); i++ {
 		if len(gobi[i].Mae) > gobi[i].MaeCount {
 			if gobi[i].Mae[gobi[i].MaeCount] == int(([]rune(strs))[0]) {
 				gobi[i].MaeCount = gobi[i].MaeCount + 1
-			} else {
-				gobi[i].MaeCount = 0
 			}
 
 			if len(gobi[i].Mae) == gobi[i].MaeCount {
