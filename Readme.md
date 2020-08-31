@@ -12,6 +12,10 @@
 
 こちらの記事に書かれた大量のアイディアに触発されて作りました。
 
+## v0.2 途中まで入力したものを、訂正して違う語尾ルールへ変換できるようにしました
+
+![yannsu2](https://github.com/yasutakatou/goBi/blob/pic/yannsu2.gif)
+
 # 環境
 
 動作環境は**Windows系OS**のみです。<br>
