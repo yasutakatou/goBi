@@ -15,12 +15,14 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
 
 	hook "github.com/robotn/gohook"
 	"github.com/taglme/string2keyboard"
+	"gopkg.in/ini.v1"
 )
 
 var (
@@ -37,6 +39,7 @@ type gobiData struct {
 }
 
 func main() {
+	_Config := flag.String("config", ".goBi", "[-config=config file)]")
 	_Debug := flag.Bool("debug", false, "[-debug=debug mode (true is enable)]")
 	_Zenkaku := flag.Bool("zenkaku", true, "[-zenkaku=zenkaku mode (true is enable)]")
 	_Delete := flag.Int("del", 8, "[-del=string delete key]")
@@ -45,21 +48,31 @@ func main() {
 
 	debug = bool(*_Debug)
 	zenkaku = bool(*_Zenkaku)
+	delKey := int(*_Delete)
+	Split := string(*_Split)
+	Config := string(*_Config)
 
 	var gobi []gobiData
+	var bakGobi []string
 
-	for i := 0; i < flag.NArg(); i++ {
-		if strings.Index(flag.Arg(i), string(*_Split)) != -1 {
-			strs := strings.Split(flag.Arg(i), string(*_Split))
-			count, err := strconv.Atoi(strs[0])
-			if err == nil {
-				if count > 0 && count < 256 {
-					gobi = append(gobi, gobiData{Mae: []int{count}, MaeCount: 0, Ato: strs[1]})
+	if Exists(Config) == true {
+		delKey, Split, gobi, bakGobi = loadConfig(Config, Split)
+	} else {
+		for i := 0; i < flag.NArg(); i++ {
+			if strings.Index(flag.Arg(i), Split) != -1 {
+				strs := strings.Split(flag.Arg(i), Split)
+				count, err := strconv.Atoi(strs[0])
+				if err == nil {
+					if count > 0 && count < 256 {
+						gobi = append(gobi, gobiData{Mae: []int{count}, MaeCount: 0, Ato: strs[1]})
+						bakGobi = append(bakGobi, flag.Arg(i))
+					}
+				} else {
+					gobi = append(gobi, gobiData{Mae: intsConvert(strs[0]), MaeCount: 0, Ato: strs[1]})
+					bakGobi = append(bakGobi, flag.Arg(i))
 				}
-			} else {
-				gobi = append(gobi, gobiData{Mae: intsConvert(strs[0]), MaeCount: 0, Ato: strs[1]})
 			}
-		}
+		}	
 	}
 
 	if len(gobi) == 0 {
@@ -71,9 +84,150 @@ func main() {
 		fmt.Println(gobi)
 	}
 
-	do(gobi, int(*_Delete))
+	do(gobi, delKey)
 
+	saveConfig(Config, delKey, Split, bakGobi, Split)
 	os.Exit(0)
+}
+
+func saveConfig(filename string, Del int, Spl string, gob []string, Split string) {
+	file, err := os.Create(filename)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	fmt.Println(zenkaku)
+	writeFile(file, "[ZENKAKU]")
+	if zenkaku == true {
+		writeFile(file, "0")
+	} else {
+		writeFile(file, "1")
+	}
+
+	writeFile(file, "[DELKEY]")
+	writeFile(file, strconv.Itoa(Del))
+
+	writeFile(file, "[SPLIT]")
+	writeFile(file, Spl)
+
+	writeFile(file, "[GOBI]")
+	for i := 0; i < len(gob); i++ {
+		writeFile(file, gob[i])
+	}
+}
+
+func writeFile(file *os.File, strs string) bool {
+	_, err := file.WriteString(strs + "\n")
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	return true
+}
+
+func loadConfig(filename, Split string) (int, string, []gobiData, []string) {
+	var Del int
+	var Spl string
+	var gob []gobiData
+	var bakGob []string
+
+	loadOptions := ini.LoadOptions{}
+	loadOptions.UnparseableSections = []string{"ZENKAKU", "DELKEY", "SPLIT", "GOBI"}
+
+	cfg, err := ini.LoadSources(loadOptions, filename)
+	if err != nil {
+		fmt.Printf("Fail to read file: %v", err)
+		os.Exit(1)
+	}
+
+	setSingleConfigBool(&zenkaku, "ZENKAKU", cfg.Section("ZENKAKU").Body())
+	setSingleConfigInt(&Del, "DELKEY", cfg.Section("DELKEY").Body())
+	setSingleConfigStr(&Spl, "SPLIT", cfg.Section("SPLIT").Body())
+	setSingleConfigGobi(&gob, &bakGob, "GOBI", cfg.Section("GOBI").Body(), Split)
+
+	return Del, Spl, gob, bakGob
+}
+
+func setSingleConfigInt(config *int, configType, datas string) {
+	if debug == true {
+		fmt.Println(" -- " + configType + " --")
+	}
+	for _, v := range regexp.MustCompile("\r\n|\n\r|\n|\r").Split(datas, -1) {
+		if len(v) > 0 {
+			tmp, err := strconv.Atoi(v)
+			if err == nil {
+				*config = tmp
+			}
+		}
+		if debug == true {
+			fmt.Println(v)
+		}
+	}
+}
+
+func setSingleConfigBool(config *bool, configType, datas string) {
+	if debug == true {
+		fmt.Println(" -- " + configType + " --")
+	}
+	for _, v := range regexp.MustCompile("\r\n|\n\r|\n|\r").Split(datas, -1) {
+		if len(v) > 0 {
+			if strings.Index(v, "0") != -1 {
+				*config = true
+				} else {
+				*config = false
+			}
+		}
+		if debug == true {
+			fmt.Println(v)
+		}
+	}
+}
+
+func setSingleConfigStr(config *string, configType, datas string) {
+	if debug == true {
+		fmt.Println(" -- " + configType + " --")
+	}
+	for _, v := range regexp.MustCompile("\r\n|\n\r|\n|\r").Split(datas, -1) {
+		if len(v) > 0 {
+			*config = v
+		}
+		if debug == true {
+			fmt.Println(v)
+		}
+	}
+}
+
+func setSingleConfigGobi(config *[]gobiData, bakConfig *[]string, configType, datas, Split string) {
+	if debug == true {
+		fmt.Println(" -- " + configType + " --")
+	}
+	for _, v := range regexp.MustCompile("\r\n|\n\r|\n|\r").Split(datas, -1) {
+		if len(v) > 0 {
+			if strings.Index(v, Split) != -1 {
+				strs := strings.Split(v, Split)
+				count, err := strconv.Atoi(strs[0])
+				if err == nil {
+					if count > 0 && count < 256 {
+						*config = append(*config, gobiData{Mae: []int{count}, MaeCount: 0, Ato: strs[1]})
+						*bakConfig = append(*bakConfig, v)
+					}
+				} else {
+					*config = append(*config, gobiData{Mae: intsConvert(strs[0]), MaeCount: 0, Ato: strs[1]})
+					*bakConfig = append(*bakConfig, v)
+				}
+			}			
+		}
+		if debug == true {
+			fmt.Println(v)
+		}
+	}
+}
+
+func Exists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
 }
 
 func intsConvert(strs string) []int {
@@ -110,10 +264,10 @@ func do(gobi []gobiData, deleteKey int) {
 						if result != 0 {
 							delKey(len(gobi[(result - 1)].Mae))
 							string2keyboard.KeyboardWrite(gobi[(result - 1)].Ato)
-							inputCount = len(gobi[(result - 1)].Mae) + len(gobi[(result - 1)].Ato)
-	
+							inputCount = len(gobi[(result-1)].Mae) + len(gobi[(result-1)].Ato)
+
 							if debug == true {
-								fmt.Println("type: " + gobi[(result - 1)].Ato)
+								fmt.Println("type: " + gobi[(result-1)].Ato)
 							}
 							for i := 0; i < len(gobi); i++ {
 								gobi[i].MaeCount = 0
@@ -125,7 +279,7 @@ func do(gobi []gobiData, deleteKey int) {
 							gobi[i].MaeCount = 0
 						}
 					}
-				}	
+				}
 			}
 		}
 
