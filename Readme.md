@@ -18,6 +18,11 @@
 
 途中から"ました"→"です"のルールに変えて変換しています。<br>
 
+### v0.4 実行した時のオプションをコンフィグファイルとして保存するようにしました
+
+デフォルトで".goBi"に実行した時のオプションを保存します。起動時にコンフィグがあれば読み込みます。<br>
+これで再実行時に毎回同じ語尾が使える！やったね！！<br>
+
 # 環境
 
 動作環境は**Windows系OS**のみです。<br>
@@ -61,6 +66,8 @@ go build goBi.go
 
 ```
 Usage of goBi.exe:
+  -config string
+        [-config=config file)] (default ".goBi")
   -debug
         [-debug=debug mode (true is enable)]
   -del int
@@ -71,6 +78,7 @@ Usage of goBi.exe:
         [-zenkaku=zenkaku mode (true is enable)] (default true)
 ```
 
+-configはコンフィグファイル名。デフォは".goBi"です。<br>
 -debugはデバッグモード。色々出力されます。<br>
 -delは入力を消す操作です。デフォはバックスペースが割当たってます。<br>
 -splitは変換前後の区切り文字。デフォは"@"です。<br>
